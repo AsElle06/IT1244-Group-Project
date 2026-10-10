@@ -1,0 +1,9 @@
+Files over 10 MB are not in the submission zip. Download them and place them as shown.
+
+Dataset (put in data/):
+  view:     TODO
+  download: TODO
+
+Trained weights (put in weights/):
+  bilstm.pt       view: TODO   download: TODO
+  transformer/    view: TODO   download: TODO

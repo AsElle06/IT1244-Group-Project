@@ -1,3 +1,11 @@
+# Files git should not track: local environment, caches, and files too large for git.
+
 .venv/
 __pycache__/
 .ipynb_checkpoints/
+
+# Dataset and trained weights (see data/README.md, weights/README.md and links.txt)
+data/*
+!data/README.md
+weights/*
+!weights/README.md
