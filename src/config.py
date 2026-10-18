@@ -12,6 +12,8 @@ FIGURES_DIR = ROOT / "figures"
 
 # Dataset file inside data/ (None = use the first .csv/.parquet/.xlsx found there)
 DATA_FILE = None
+# Google Drive folder the dataset is downloaded from when data/ has no dataset file
+DATA_URL = "https://drive.google.com/drive/folders/1HgWnAbksANmolFRrmLkOjy8J3Zhu4V4x"
 
 SEED = 42
 
@@ -27,5 +29,7 @@ ANALYSIS_COLS = [BRAND_COL, "problem_terms", IMDRF_COL, "manufacturer_narrative"
 TEST_SIZE = 0.2
 N_FOLDS = 5
 
-# Classes with fewer training reports than this are merged into one "OTHER" class
-MIN_CLASS_COUNT = 50  # TODO: decide after the dataset analysis (class counts)
+# Classes with fewer training reports than this are merged into one "OTHER" class.
+# 150 keeps A10 and A12 (~190 training, ~48 test reports each) and merges A15 (~98 training,
+# ~24 test) and smaller: too few test reports for a reliable F1 (main.ipynb section 2.1).
+MIN_CLASS_COUNT = 150

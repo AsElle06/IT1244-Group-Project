@@ -1,4 +1,4 @@
-"""Dataset analysis on the training set (Leanne).
+"""Dataset analysis on the whole dataset, before the split (Leanne).
 
     eda.py  one function per planned analysis in the proposal (plots and summary tables)
 """

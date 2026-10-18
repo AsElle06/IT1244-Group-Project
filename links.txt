@@ -1,8 +1,8 @@
 Files over 10 MB are not in the submission zip. Download them and place them as shown.
 
-Dataset (put in data/):
-  view:     TODO
-  download: TODO
+Dataset (put in data/; main.ipynb downloads it automatically if missing):
+  view:     https://drive.google.com/drive/folders/1HgWnAbksANmolFRrmLkOjy8J3Zhu4V4x?usp=sharing
+  download: https://drive.google.com/uc?export=download&id=1W3i69D4WqnDx5Glff4jnidDFu_RxMAxi
 
 Trained weights (put in weights/):
   bilstm.pt       view: TODO   download: TODO

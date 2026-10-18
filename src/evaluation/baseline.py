@@ -8,14 +8,16 @@ What it does
 Why we need it
     1. It is the minimum bar. A model that doesn't clearly beat it has learned nothing useful
        from the text.
-    2. It shows why macro-F1 is our main metric. If A09 is 40% of reports and there are 15
-       classes, this baseline gets 40% accuracy, which sounds acceptable, but a macro-F1 of
-       about 0.04: it never predicts the other 14 classes, so each of them scores F1 = 0
-       (A09's own F1 is about 0.57, averaged over 15 classes). High accuracy can hide a model
-       that misses every rare failure type.
+    2. It shows why macro-F1 is our main metric. A09 is 30% of reports and there are 12
+       classes after cleaning, so this baseline gets 30% accuracy but a macro-F1 of about
+       0.04: it never predicts the other 11 classes, so each of them scores F1 = 0 (A09's own
+       F1 is about 0.46, averaged over 12 classes). High accuracy can hide a model that misses
+       every rare failure type.
 
 Not to be confused with TF-IDF + LR, which the proposal calls our "baseline model": that is
 the simplest real classifier. This file is the trivial lower bound below all three models.
+A much stronger reference is a phrase-lookup baseline (the template's complaint phrase ->
+its most common training label), motivated in main.ipynb section 2.5.
 
 It has the same methods as the models (TextClassifier in src/interfaces.py), so the evaluation
 in main.ipynb section 6 can loop over it together with them; it is the first row of the
