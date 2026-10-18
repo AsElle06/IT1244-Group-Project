@@ -13,4 +13,5 @@ def load_reports(path: Path | None = None) -> pd.DataFrame:
     Returns one row per report, unchanged, with columns config.TEXT_COL, config.LABEL_COL
     and whichever of config.ANALYSIS_COLS exist in the file.
     """
-    raise NotImplementedError("TODO (Suling, James)")
+    now = pd.read_csv("data/cgm_reports_dataset.csv")
+    return now
