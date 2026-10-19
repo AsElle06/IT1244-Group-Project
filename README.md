@@ -72,7 +72,8 @@ links.txt                      Google Drive links for files over 10 MB
 |---|---|---|---|---|
 | Loading the data | Suling, James | `data/loading.py` | 1 | done |
 | Dataset analysis | Leanne | `analysis/eda.py` | 2 | done |
-| Train/test split, cleaning | Suling | `data/splitting.py`, `data/cleaning.py` | 3, 4 | placeholders, steps decided (notebook 2.10) |
+| Train/test split | Suling | `data/splitting.py` | 3 | placeholder |
+| Cleaning | Suling | `data/cleaning.py` | 4 | done |
 | Evaluation (incl. baselines) | Lucas | `evaluation/` | 6 | placeholders |
 | TF-IDF + LR | James | `models/tfidf_lr.py` | 5.1 | placeholder |
 | BiLSTM, transformer | Suling | `models/bilstm.py`, `transformer.py`, `torch_base.py`, `torch_training.py` | 5.2, 5.3 | done |
