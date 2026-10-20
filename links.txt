@@ -5,5 +5,5 @@ Dataset (put in data/; main.ipynb downloads it automatically if missing):
   download: https://drive.google.com/uc?export=download&id=1W3i69D4WqnDx5Glff4jnidDFu_RxMAxi
 
 Trained weights (put in weights/):
-  bilstm.pt       view: TODO   download: TODO
+  bilstm_fold0-4.pt  under 10 MB each: included in the zip, no link needed
   transformer/    view: TODO   download: TODO

@@ -25,7 +25,10 @@ def out_of_fold_proba(make_model: Callable[[], TextClassifier], texts: pd.Series
 
     make_model: returns a fresh, untrained model with fixed settings.
     model_path: k -> where turn k's model is saved (train=True) or loaded from (train=False).
-    load_model: path -> trained model; needed when train=False.
+        With train=True, a turn whose file already exists is loaded instead of retrained, so a
+        run that stopped (e.g. a Colab disconnect) continues where it left off. Delete the
+        files in weights/ to retrain from scratch.
+    load_model: path -> trained model; needed when train=False or to continue a stopped run.
     max_train_reports: train on a stratified random sample of this many training reports
         (e.g. to save compute for the transformer); None = all of them.
 
@@ -35,7 +38,9 @@ def out_of_fold_proba(make_model: Callable[[], TextClassifier], texts: pd.Series
     turns = []
     for k, (train_positions, test_positions) in enumerate(folds):
         path = model_path(k) if model_path else None
-        if train:
+        already_saved = path is not None and Path(path).exists() and load_model is not None
+        if train and not already_saved:
+            print(f"turn {k}: training")
             train_texts, train_labels = texts.iloc[train_positions], labels.iloc[train_positions]
             if max_train_reports and max_train_reports < len(train_texts):
                 train_texts, _, train_labels, _ = train_test_split(
@@ -45,6 +50,7 @@ def out_of_fold_proba(make_model: Callable[[], TextClassifier], texts: pd.Series
             if path is not None:
                 model.save(path)
         else:
+            print(f"turn {k}: loading the saved model from {path}")
             model = load_model(path)
 
         test_texts = texts.iloc[test_positions]
