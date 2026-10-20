@@ -32,7 +32,10 @@ pip install -r requirements.txt
    - `TRAIN = True` trains every model once per fold and saves the weights to `weights/`.
    - `TRAIN = False` loads saved weights instead (download them first, see `links.txt`).
 
-The transformer needs a GPU for the full training set (e.g. Google Colab).
+The BiLSTM and transformer need a GPU for the full training set (e.g. Google Colab). On Colab,
+the notebook's first code cell clones this repository and pulls the latest pushed code. Colab
+files are wiped when the runtime disconnects, so copy `weights/` back after training; with
+`TRAIN = True`, turns already saved in `weights/` are loaded instead of retrained.
 
 ## Structure
 
@@ -54,8 +57,7 @@ src/
     tfidf_lr.py                model 1: TF-IDF + Logistic Regression
     bilstm.py                  model 2: BiLSTM
     transformer.py             model 3: fine-tuned transformer
-    torch_base.py              shared fit/predict for the two PyTorch models
-    torch_training.py          shared PyTorch training loop
+    torch_training.py          shared training functions for the two PyTorch models
   evaluation/
     baseline.py                majority-class baseline (reference point, see below)
     metrics.py                 macro-F1 and other metrics on the out-of-fold predictions
@@ -76,7 +78,8 @@ links.txt                      Google Drive links for files over 10 MB
 | Folds (train/test rotation) | Suling | `data/splitting.py` | 4 | done |
 | Evaluation (incl. baselines) | Lucas | `evaluation/` | 6 | metrics and baseline are placeholders |
 | TF-IDF + LR | James | `models/tfidf_lr.py` | 5.1 | placeholder |
-| BiLSTM, transformer | Suling | `models/bilstm.py`, `transformer.py`, `torch_base.py`, `torch_training.py` | 5.2, 5.3 | done |
+| BiLSTM | Suling | `models/bilstm.py`, `torch_training.py` | 5.2 | in progress |
+| Transformer | Suling | `models/transformer.py`, `torch_training.py` | 5.3 | placeholder |
 
 ## Why the dataset analysis uses the whole dataset
 
