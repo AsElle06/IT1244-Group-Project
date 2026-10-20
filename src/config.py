@@ -25,11 +25,16 @@ IMDRF_COL = "imdrf_top_categories"
 # Used for analysis only, never as model input
 ANALYSIS_COLS = [BRAND_COL, "problem_terms", IMDRF_COL, "manufacturer_narrative"]
 
-# Train/test split and cross-validation
-TEST_SIZE = 0.2
+# Folds: every report is in one of N_FOLDS folds; each fold is the test set once (5-fold rotation)
 N_FOLDS = 5
+TEST_SIZE = 1 / N_FOLDS  # share of the reports in the test fold of each turn
 
-# Classes with fewer training reports than this are merged into one "OTHER" class.
+# A cleaned text that appears more than this many times is randomly cut to this many copies,
+# so no single template makes one fold much heavier in its class (main.ipynb section 3)
+MAX_COPIES_PER_TEXT = 200
+
+# Classes with fewer training reports than this are merged into one "OTHER" class, decided
+# once on the whole dataset (150 training reports per turn = 150 / (1 - TEST_SIZE) reports in all).
 # 150 keeps A10 and A12 (~190 training, ~48 test reports each) and merges A15 (~98 training,
 # ~24 test) and smaller: too few test reports for a reliable F1 (main.ipynb section 2.1).
 MIN_CLASS_COUNT = 150

@@ -8,9 +8,10 @@ free-text `event_description`. We compare three models of increasing complexity:
 2. Bidirectional LSTM with word embeddings and attention
 3. Fine-tuned transformer (DistilBERT or Bio_ClinicalBERT)
 
-Main metric: macro-F1 on a stratified 80/20 split, with hyper-parameters chosen by
-stratified 5-fold cross-validation on the training set. Both are grouped so that
-near-identical reports stay on one side.
+Main metric: macro-F1 over a 5-fold rotation. Every report is in one of 5 folds; each fold is
+the test set once while the models train on the other four, so every report is predicted
+once by a model that never saw it. All copies of the same cleaned text stay in one fold.
+Model settings are fixed (no hyper-parameter tuning).
 
 About 90% of reports are templates where one complaint phrase almost decides the label
 (notebook section 2.5), so we judge the models on rare classes and non-template text, and
@@ -28,9 +29,8 @@ pip install -r requirements.txt
 1. The dataset downloads into `data/` the first time the notebook loads it
    (see [data/README.md](data/README.md)).
 2. Open `main.ipynb`, select the `.venv` kernel, and run all cells.
-   - `TRAIN = True` trains every model and saves weights to `weights/`.
+   - `TRAIN = True` trains every model once per fold and saves the weights to `weights/`.
    - `TRAIN = False` loads saved weights instead (download them first, see `links.txt`).
-   - `RUN_CV = False` skips the cross-validation search to save time.
 
 The transformer needs a GPU for the full training set (e.g. Google Colab).
 
@@ -39,15 +39,15 @@ The transformer needs a GPU for the full training set (e.g. Google Colab).
 The notebook runs the pipeline in order; the code it calls is in `src/`, one folder per stage.
 
 ```
-main.ipynb                     the whole pipeline: load -> analyse -> split -> clean -> models -> evaluate
+main.ipynb                     the whole pipeline: load -> analyse -> clean -> folds -> models -> evaluate
 src/
-  config.py                    settings: folders, seed, column names, split sizes
+  config.py                    settings: folders, seed, column names, folds, copy cap
   interfaces.py                shared types that connect the parts (read this first)
   helpers.py                   device (GPU/CPU) and random seed
   data/
     loading.py                 read the dataset file
-    splitting.py               train/test split and cross-validation folds
-    cleaning.py                text and label cleaning (steps decided after the analysis)
+    cleaning.py                text and label cleaning, cap on copies per text
+    splitting.py               the 5 folds of the train/test rotation
   analysis/
     eda.py                     dataset analysis plots and tables
   models/
@@ -58,8 +58,8 @@ src/
     torch_training.py          shared PyTorch training loop
   evaluation/
     baseline.py                majority-class baseline (reference point, see below)
-    metrics.py                 macro-F1 and other metrics on the test set
-    cross_validation.py        cross-validation and hyper-parameter search
+    metrics.py                 macro-F1 and other metrics on the out-of-fold predictions
+    cross_validation.py        the rotation: train once per fold, predict the fold left out
 data/                          the dataset (not in git)
 weights/                       trained model weights (not in git)
 figures/                       plots saved for the report and slides
@@ -72,24 +72,33 @@ links.txt                      Google Drive links for files over 10 MB
 |---|---|---|---|---|
 | Loading the data | Suling, James | `data/loading.py` | 1 | done |
 | Dataset analysis | Leanne | `analysis/eda.py` | 2 | done |
-| Train/test split | Suling | `data/splitting.py` | 3 | placeholder |
-| Cleaning | Suling | `data/cleaning.py` | 4 | done |
-| Evaluation (incl. baselines) | Lucas | `evaluation/` | 6 | placeholders |
+| Cleaning | Suling | `data/cleaning.py` | 3 | done |
+| Folds (train/test rotation) | Suling | `data/splitting.py` | 4 | done |
+| Evaluation (incl. baselines) | Lucas | `evaluation/` | 6 | metrics and baseline are placeholders |
 | TF-IDF + LR | James | `models/tfidf_lr.py` | 5.1 | placeholder |
 | BiLSTM, transformer | Suling | `models/bilstm.py`, `transformer.py`, `torch_base.py`, `torch_training.py` | 5.2, 5.3 | done |
 
 ## Why the dataset analysis uses the whole dataset
 
-Section 2 of the notebook analyses all 379,886 reports, before the train/test split, because
-the split depends on its findings: which labels are missing or too rare to keep, and which
-reports are near-copies of the same template that must stay on one side of the split. The
-group-aware split also moves whole templates to one side, so the training set's class and brand
-shares can drift from the dataset's.
+Section 2 of the notebook analyses all 379,886 reports, before the folds are made, because
+the folds depend on its findings: which labels are missing or too rare to keep, and which
+reports are copies of the same template that must stay in one fold.
 
-This does not leak the test set into the models, because the analysis only sets rules (drop
-NONE, merge A24-A27, mask dates and IDs, group by normalised text). Everything fitted to the
-data (TF-IDF vocabulary, class weights, which classes fall under `MIN_CLASS_COUNT`, `MAX_LEN`)
-is computed from the training set only. The decisions are summarised in notebook section 2.10.
+This does not leak test reports into the models, because the analysis only sets rules (drop
+NONE, merge A24-A27, mask dates and IDs, keep copies of a text together, cap copies at 200).
+Everything the models learn (TF-IDF vocabulary, class weights, network weights) comes from
+each turn's training folds only. The decisions are summarised in notebook section 2.10.
+
+## Why a 5-fold rotation instead of a fixed 80/20 test set
+
+The handout asks for a fixed 80/20 split with 5-fold cross-validation on the 80% to avoid
+overfitting. Our data is about 90% templates, so the main overfitting risk is leakage: copies
+of the same text in both training and test. We prevent it directly: all copies of a cleaned
+text stay in one fold, and a text that appears more than 200 times is cut to 200 copies so no
+template makes one fold much heavier in its class. Each fold is then the test set once, so
+every report (including each class's main templates) is tested once by a model that never saw
+it, and the results use all the data instead of one 20% sample. Model settings are fixed, so
+no choice is tuned on the folds that are reported.
 
 ## The majority baseline
 

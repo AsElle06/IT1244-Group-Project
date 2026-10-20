@@ -1,7 +1,7 @@
 """Shared types that connect the parts of the pipeline.
 
 Every module codes against these, so data -> models -> evaluation plug together:
-the model interface (TextClassifier), the score dictionaries and the cross-validation fold type.
+the model interface (TextClassifier), the score dictionaries and the fold type.
 If you need to change one, tell the team first.
 """
 from pathlib import Path
@@ -14,7 +14,7 @@ import pandas as pd
 Texts = Union[Sequence[str], pd.Series]
 Labels = Union[Sequence[str], pd.Series]
 
-# One cross-validation fold: (training row positions, validation row positions)
+# One turn of the 5-fold rotation: (training row positions, test row positions)
 Fold = tuple[np.ndarray, np.ndarray]
 
 
@@ -23,13 +23,6 @@ class Scores(TypedDict):
     macro_f1: float      # main metric
     accuracy: float
     weighted_f1: float
-
-
-class BinaryScores(TypedDict):
-    """Defect-vs-not metrics (binary extension)."""
-    defect_recall: float
-    defect_f1: float
-    roc_auc: float
 
 
 class TextClassifier(Protocol):

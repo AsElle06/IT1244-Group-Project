@@ -5,14 +5,17 @@ Steps decided by the dataset analysis (main.ipynb section 2, summary in 2.10):
   missing. Drop reports whose description is empty (also after cleaning).
 - Merge A24-A27 into one class, as the course README's label table does
   ("Unknown / No device problem").
-- Merge classes with fewer than config.MIN_CLASS_COUNT training reports into "OTHER".
+- Merge classes with fewer than config.MIN_CLASS_COUNT training reports into "OTHER",
+  decided once on the whole dataset.
+- Cut every cleaned text that appears more than config.MAX_COPIES_PER_TEXT times to that many
+  copies (cap_copies), so no template makes one fold much heavier in its class.
 - Clean the text (clean_text): keep one copy of a description that repeats itself in full
   (45% of Abbott reports); lowercase; remove redaction markers such as "(B)(6)", report and
   field-action IDs, dates, times and years; replace other numbers by "num"; expand
   abbreviations; keep negations and punctuation; no stemming.
 
-clean_reports only applies fixed rules to each row, so it gives the same result before or
-after the split. Only the rare classes are learned from data, from the training set alone.
+All steps are fixed rules applied to the whole dataset before the folds are made (section 3);
+nothing is learned from the data here.
 
 Owner: Suling. Status: done.
 """
@@ -144,16 +147,25 @@ def clean_reports(df: pd.DataFrame) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
-def frequent_classes(train_labels: pd.Series, min_count: int = config.MIN_CLASS_COUNT) -> list[str]:
-    """Classes with at least min_count reports in the training set: the ones kept as they are."""
-    counts = train_labels.value_counts()
+def frequent_classes(labels: pd.Series, min_count: float = config.MIN_CLASS_COUNT) -> list[str]:
+    """Classes with at least min_count reports: the ones kept as they are."""
+    counts = labels.value_counts()
     return sorted(counts[counts >= min_count].index)
 
 
 def merge_rare_classes(labels: pd.Series, keep: list[str], new_label: str = OTHER_LABEL) -> pd.Series:
-    """Replace every label not in keep by new_label. Same index and length as labels.
-
-    Use the same keep list (frequent_classes of the training set) for training and test labels,
-    so a class that only appears in the test set also becomes OTHER.
-    """
+    """Replace every label not in keep by new_label. Same index and length as labels."""
     return labels.where(labels.isin(keep), new_label)
+
+
+def cap_copies(df: pd.DataFrame, max_copies: int = config.MAX_COPIES_PER_TEXT,
+               seed: int = config.SEED) -> pd.DataFrame:
+    """Randomly cut every cleaned text that appears more than max_copies times to max_copies copies.
+
+    Texts that appear max_copies times or fewer are kept in full. The copies kept are a random
+    sample of the text's reports, so its mix of labels stays about the same. Returns the kept
+    rows in their original order, index reset to 0..n-1.
+    """
+    shuffled = df.sample(frac=1, random_state=seed)
+    kept = shuffled.groupby(config.TEXT_COL, sort=False).head(max_copies)
+    return kept.sort_index().reset_index(drop=True)

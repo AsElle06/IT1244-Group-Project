@@ -1,33 +1,55 @@
-"""Cross-validation on the training set, used to choose each model's hyper-parameters.
+"""The 5-fold rotation: train a model once per fold and predict the fold it never saw.
 
-Every model is trained on each fold's training part and scored (macro-F1) on its validation
-part; the test set is never touched here.
+For each fold, a fresh model is trained on the other folds and predicts the reports of that
+fold. Together the five turns give one prediction for every report (out-of-fold predictions),
+each made by a model that did not train on that report or on any copy of its text.
+Settings are fixed (no hyper-parameter tuning).
 
-Owner: Lucas. Status: placeholder. Keep the signatures and return types.
+Owner: Suling. Status: done.
 """
+from pathlib import Path
 from typing import Callable
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
-from src.interfaces import Fold, Labels, TextClassifier, Texts
+from src import config
+from src.interfaces import Fold, TextClassifier
 
-TODO = "TODO (Lucas)"
 
+def out_of_fold_proba(make_model: Callable[[], TextClassifier], texts: pd.Series, labels: pd.Series,
+                      folds: list[Fold], model_path: Callable[[int], Path] | None = None,
+                      train: bool = True, load_model: Callable[[Path], TextClassifier] | None = None,
+                      max_train_reports: int | None = None) -> pd.DataFrame:
+    """Class probabilities for every report, from the model of the turn in which it was tested.
 
-def cross_validate(make_model: Callable[[], TextClassifier], texts: Texts, labels: Labels,
-                   folds: list[Fold]) -> list[float]:
-    """Train a fresh model (make_model()) on each fold's training part.
+    make_model: returns a fresh, untrained model with fixed settings.
+    model_path: k -> where turn k's model is saved (train=True) or loaded from (train=False).
+    load_model: path -> trained model; needed when train=False.
+    max_train_reports: train on a stratified random sample of this many training reports
+        (e.g. to save compute for the transformer); None = all of them.
 
-    Returns the macro-F1 on each fold's validation part, one float per fold.
+    Returns a DataFrame with the same index as texts and one column per class.
+    The predicted label of each report is the column with the highest probability.
     """
-    raise NotImplementedError(TODO)
+    turns = []
+    for k, (train_positions, test_positions) in enumerate(folds):
+        path = model_path(k) if model_path else None
+        if train:
+            train_texts, train_labels = texts.iloc[train_positions], labels.iloc[train_positions]
+            if max_train_reports and max_train_reports < len(train_texts):
+                train_texts, _, train_labels, _ = train_test_split(
+                    train_texts, train_labels, train_size=max_train_reports,
+                    stratify=train_labels, random_state=config.SEED)
+            model = make_model().fit(train_texts, train_labels)
+            if path is not None:
+                model.save(path)
+        else:
+            model = load_model(path)
 
+        test_texts = texts.iloc[test_positions]
+        turns.append(pd.DataFrame(model.predict_proba(test_texts), index=test_texts.index,
+                                  columns=model.classes_))
 
-def grid_search(make_model: Callable[..., TextClassifier], grid: list[dict], texts: Texts,
-                labels: Labels, folds: list[Fold]) -> tuple[pd.DataFrame, dict]:
-    """Cross-validate make_model(**params) for every params dict in grid.
-
-    Returns (table, best_params). table has one row per params dict, with columns
-    "params" (dict), "mean_macro_f1" (float), "std" (float).
-    """
-    raise NotImplementedError(TODO)
+    # A class missing from one turn's training data gets probability 0 in that turn
+    return pd.concat(turns).fillna(0).reindex(texts.index)
