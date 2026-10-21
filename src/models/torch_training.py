@@ -6,12 +6,14 @@ Each model's fit() calls these step by step, so both models are trained the same
     make_loader                batches of (model inputs, label ids)
     train_with_early_stopping  the training loop, keeping the best epoch
     predict_proba              class probabilities for every report
+    plot_training_curves       loss and validation macro-F1 per epoch, one line per turn
 
 Owner: Suling. Status: in progress.
 """
 import time
 from typing import Callable
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
@@ -136,3 +138,49 @@ def train_with_early_stopping(net: torch.nn.Module, train_loader: DataLoader, va
 
     net.load_state_dict(best_weights)
     return history
+
+
+# One fixed colour per turn of the rotation (colour-blind-safe order), plus chart surface and ink
+TURN_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]
+SURFACE, INK, MUTED_INK, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e1e0d9"
+
+
+def plot_training_curves(histories: list[pd.DataFrame], model_name: str,
+                         save_as: str | None = None) -> None:
+    """Training loss and validation macro-F1 per epoch, one line per turn of the rotation.
+
+    histories: one DataFrame per turn with columns epoch, train_loss, val_macro_f1
+        (the *_history.csv files saved next to the weights).
+    The dot on each validation line marks the best epoch: the weights that were kept.
+    If save_as is given, the figure is also saved to config.FIGURES_DIR.
+    """
+    fig, (ax_loss, ax_f1) = plt.subplots(1, 2, figsize=(11, 4), facecolor=SURFACE)
+    for k, history in enumerate(histories):
+        color = TURN_COLORS[k]
+        ax_loss.plot(history["epoch"], history["train_loss"], color=color, linewidth=2, label=f"turn {k}")
+        ax_f1.plot(history["epoch"], history["val_macro_f1"], color=color, linewidth=2)
+        best = history.loc[history["val_macro_f1"].idxmax()]
+        ax_f1.scatter(best["epoch"], best["val_macro_f1"], s=70, color=color, edgecolors=SURFACE,
+                      linewidths=2, zorder=3)
+
+    for ax, title in [(ax_loss, "Training loss"), (ax_f1, "Validation macro-F1 (dot = epoch kept)")]:
+        ax.set_facecolor(SURFACE)
+        ax.set_title(title, loc="left", color=INK, fontsize=11)
+        ax.set_xlabel("epoch", color=MUTED_INK)
+        ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+        ax.grid(axis="y", color=GRID, linewidth=0.8)
+        ax.set_axisbelow(True)
+        ax.tick_params(colors=MUTED_INK, length=0)
+        for side in ["top", "right", "left"]:
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_color(GRID)
+
+    fig.suptitle(f"{model_name}: training curves of the 5 turns", x=0.01, ha="left", color=INK,
+                 fontsize=13)
+    fig.legend(loc="upper right", ncol=len(histories), frameon=False, labelcolor=INK,
+               bbox_to_anchor=(0.99, 1.0))
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    if save_as is not None:
+        config.FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+        plt.savefig(config.FIGURES_DIR / save_as, dpi=200, bbox_inches="tight")
+    plt.show()

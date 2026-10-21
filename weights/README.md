@@ -10,5 +10,7 @@
 | `bilstm_fold{k}_history.csv` | BiLSTM of turn k: training loss and validation macro-F1 per epoch |
 | `transformer/` | fine-tuned transformer (Hugging Face weights, tokenizer, `classifier.json`) |
 
-The weights are not committed to git. Files over 10 MB go on Google Drive, with links in
-`links.txt` at the project root.
+The weights are not committed to git. They are kept in the Google Drive folder
+`WEIGHTS_URL` in `src/config.py` (links in `links.txt` at the project root). With
+`TRAIN = False`, the notebook downloads any file that is missing here
+(`loading.download_weights()`); files already here are never overwritten.

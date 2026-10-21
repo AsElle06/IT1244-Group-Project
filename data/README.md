@@ -7,7 +7,7 @@ This folder holds the course-provided CGM subset of the FDA MAUDE database
 
 You do not need to download it by hand. `loading.load_reports()` checks this folder first,
 and if there is no dataset file here it downloads `cgm_reports_dataset.csv` (about 300 MB)
-from the [Google Drive folder](https://drive.google.com/drive/folders/1HgWnAbksANmolFRrmLkOjy8J3Zhu4V4x)
+from the [Google Drive folder](https://drive.google.com/drive/folders/1fmwK3pREwZvBy02zrfxeUNDK-461Kqbe)
 into this folder. Later runs find the file and skip the download.
 
 - The download needs `gdown` (included in `requirements.txt`).

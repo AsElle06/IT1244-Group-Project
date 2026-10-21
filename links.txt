@@ -1,9 +1,11 @@
-Files over 10 MB are not in the submission zip. Download them and place them as shown.
+Files over 10 MB are not in the submission zip. main.ipynb downloads them automatically;
+to download them by hand instead, place them as shown.
 
-Dataset (put in data/; main.ipynb downloads it automatically if missing):
-  view:     https://drive.google.com/drive/folders/1HgWnAbksANmolFRrmLkOjy8J3Zhu4V4x?usp=sharing
+Dataset (put in data/; downloaded automatically if missing):
+  view:     https://drive.google.com/drive/folders/1fmwK3pREwZvBy02zrfxeUNDK-461Kqbe?usp=sharing
   download: https://drive.google.com/uc?export=download&id=1W3i69D4WqnDx5Glff4jnidDFu_RxMAxi
 
-Trained weights (put in weights/):
-  bilstm_fold0-4.pt  under 10 MB each: included in the zip, no link needed
-  transformer/    view: TODO   download: TODO
+Trained weights (put in weights/; with TRAIN = False, missing files are downloaded automatically):
+  view:     https://drive.google.com/drive/folders/17BsA7F9oVMgjUuJ_sb79y4z7yqE-fekn?usp=sharing
+  bilstm_fold0-4.pt, bilstm_fold0-4_history.csv   under 10 MB each: also included in the zip
+  transformer/   TODO

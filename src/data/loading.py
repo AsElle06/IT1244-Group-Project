@@ -1,7 +1,7 @@
-"""Reads the course CGM MAUDE dataset from data/ into a DataFrame.
+"""Reads the course CGM MAUDE dataset from data/ into a DataFrame, and downloads the trained weights.
 
 If data/ has no dataset file yet, it is first downloaded from the Google Drive folder
-config.DATA_URL.
+config.DATA_URL. download_weights() fetches the trained models from config.WEIGHTS_URL.
 
 Owner: Suling, James. Status: done.
 """
@@ -33,6 +33,26 @@ def download_data() -> None:
 
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     gdown.download_folder(url=config.DATA_URL, output=str(config.DATA_DIR), quiet=False)
+
+
+def download_weights() -> None:
+    """Download the trained weights in the Google Drive folder config.WEIGHTS_URL into weights/.
+
+    Only files that are not in weights/ yet are downloaded, so files already there (e.g. weights
+    you have just trained) are never overwritten.
+    """
+    import gdown
+
+    config.WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+    # List the folder's files first (no download), then fetch only the missing ones
+    files = gdown.download_folder(url=config.WEIGHTS_URL, output=str(config.WEIGHTS_DIR),
+                                  quiet=True, skip_download=True)
+    missing = [f for f in files if not (config.WEIGHTS_DIR / f.path).exists()]
+    for f in missing:
+        target = config.WEIGHTS_DIR / f.path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        gdown.download(id=f.id, output=str(target), quiet=True)
+    print(f"weights/: downloaded {len(missing)} files, {len(files) - len(missing)} were already there")
 
 
 def load_reports(path: Path | None = None) -> pd.DataFrame:

@@ -9,7 +9,7 @@ Unlike TF-IDF it keeps word order and context, e.g. "alarm did not sound". The e
 learned from scratch, so any gain from pretraining is left to the transformer to show.
 Class-weighted loss, dropout and early stopping (src/models/torch_training.py) limit overfitting.
 
-Owner: Suling. Status: in progress. Implements the TextClassifier interface (src/interfaces.py).
+Owner: Suling. Status: done. Implements the TextClassifier interface (src/interfaces.py).
 """
 import re
 from collections import Counter

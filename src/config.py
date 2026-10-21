@@ -12,8 +12,10 @@ FIGURES_DIR = ROOT / "figures"
 
 # Dataset file inside data/ (None = use the first .csv/.parquet/.xlsx found there)
 DATA_FILE = None
-# Google Drive folder the dataset is downloaded from when data/ has no dataset file
-DATA_URL = "https://drive.google.com/drive/folders/1HgWnAbksANmolFRrmLkOjy8J3Zhu4V4x"
+# Google Drive folders: the dataset is downloaded from DATA_URL when data/ has no dataset file;
+# missing trained weights are downloaded from WEIGHTS_URL when the notebook runs with TRAIN = False
+DATA_URL = "https://drive.google.com/drive/folders/1fmwK3pREwZvBy02zrfxeUNDK-461Kqbe"
+WEIGHTS_URL = "https://drive.google.com/drive/folders/17BsA7F9oVMgjUuJ_sb79y4z7yqE-fekn"
 
 SEED = 42
 
