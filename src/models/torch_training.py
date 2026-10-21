@@ -8,8 +8,13 @@ Each model's fit() calls these step by step, so both models are trained the same
     predict_proba              class probabilities for every report
     plot_training_curves       loss and validation macro-F1 per epoch, one line per turn
 
-Owner: Suling. Status: in progress.
+Mixed precision (transformer only, GPU only): the heavy calculations run in 16-bit numbers, which
+the T4 GPU computes several times faster; the weights themselves stay 32-bit. Off by default, so
+the BiLSTM is trained exactly as before.
+
+Owner: Suling. Status: done.
 """
+import contextlib
 import time
 from typing import Callable
 
@@ -69,26 +74,42 @@ def make_loader(inputs: list, label_ids: np.ndarray, batch_size: int,
                       generator=generator)
 
 
-def predict_proba(net: torch.nn.Module, loader: DataLoader, device: str) -> np.ndarray:
+def _uses_16_bit(mixed_precision: bool, device: str) -> bool:
+    """Mixed precision only runs on a GPU; on a CPU everything stays 32-bit."""
+    return mixed_precision and str(device).startswith("cuda")
+
+
+def _autocast(enabled: bool):
+    """Inside this block the GPU does the heavy calculations in 16-bit; does nothing when disabled."""
+    return torch.autocast("cuda", dtype=torch.float16) if enabled else contextlib.nullcontext()
+
+
+def predict_proba(net: torch.nn.Module, loader: DataLoader, device: str,
+                  mixed_precision: bool = False) -> np.ndarray:
     """Class probabilities for every report in the loader, shape (n, n_classes)."""
+    use_16_bit = _uses_16_bit(mixed_precision, device)
     net.eval()
     batches = []
     with torch.no_grad():
         for inputs, _ in loader:
             inputs = {name: tensor.to(device) for name, tensor in inputs.items()}
-            batches.append(torch.softmax(net(**inputs).float(), dim=1).cpu())
+            with _autocast(use_16_bit):
+                scores = net(**inputs)
+            batches.append(torch.softmax(scores.float(), dim=1).cpu())
     return torch.cat(batches).numpy()
 
 
 def train_with_early_stopping(net: torch.nn.Module, train_loader: DataLoader, val_loader: DataLoader,
                               weights: torch.Tensor, epochs: int, lr: float, patience: int,
                               device: str, weight_decay: float = 0.0,
-                              make_scheduler: Callable | None = None) -> list[dict]:
+                              make_scheduler: Callable | None = None,
+                              mixed_precision: bool = False) -> list[dict]:
     """Train with class-weighted cross-entropy; stop early on validation macro-F1.
 
     After every epoch the model is scored on the validation set. Training stops after `patience`
     epochs without improvement, and the network is reset to its best epoch.
     make_scheduler(optimizer, total_steps): optional learning-rate schedule (for the transformer).
+    mixed_precision: 16-bit calculations on a GPU (for the transformer); the weights stay 32-bit.
 
     Returns one dict per epoch: {"epoch", "train_loss", "val_macro_f1", "seconds"}.
     """
@@ -97,6 +118,12 @@ def train_with_early_stopping(net: torch.nn.Module, train_loader: DataLoader, va
     scheduler = make_scheduler(optimizer, epochs * len(train_loader)) if make_scheduler else None
     loss_fn = torch.nn.CrossEntropyLoss(weight=weights.to(device))
     val_labels = np.concatenate([labels.numpy() for _, labels in val_loader])
+
+    # With 16-bit calculations, small gradients could round to 0. The scaler multiplies the loss by
+    # a large number before the gradients are computed and divides them back before the update.
+    # When disabled it does nothing: scale() returns the loss unchanged and step() is optimizer.step().
+    use_16_bit = _uses_16_bit(mixed_precision, device)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_16_bit)
 
     history = []
     best_f1, best_weights, epochs_without_improvement = -1.0, None, 0
@@ -110,16 +137,19 @@ def train_with_early_stopping(net: torch.nn.Module, train_loader: DataLoader, va
             inputs = {name: tensor.to(device) for name, tensor in inputs.items()}
             labels = labels.to(device)
             optimizer.zero_grad()
-            loss = loss_fn(net(**inputs), labels)
-            loss.backward()
+            with _autocast(use_16_bit):
+                loss = loss_fn(net(**inputs), labels)
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)  # true gradient sizes again, before clipping
             torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=1.0)  # avoid exploding steps
-            optimizer.step()
+            scaler.step(optimizer)  # with 16-bit: skips the step if a gradient overflowed
+            scaler.update()
             if scheduler:
                 scheduler.step()
             total_loss += loss.item() * len(labels)
 
         # Score on the validation set
-        val_pred = predict_proba(net, val_loader, device).argmax(axis=1)
+        val_pred = predict_proba(net, val_loader, device, mixed_precision).argmax(axis=1)
         val_f1 = float(f1_score(val_labels, val_pred, average="macro", zero_division=0))
         history.append({"epoch": epoch, "train_loss": total_loss / len(train_loader.dataset),
                         "val_macro_f1": val_f1, "seconds": round(time.time() - start, 1)})

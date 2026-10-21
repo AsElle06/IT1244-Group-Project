@@ -77,7 +77,7 @@ links.txt                      Google Drive links for files over 10 MB
 | Cleaning | Suling | `data/cleaning.py` | 3 | done |
 | Folds (train/test rotation) | Suling | `data/splitting.py` | 4 | done |
 | Evaluation (incl. baselines) | Lucas | `evaluation/` | 6 | metrics and baseline are placeholders |
-| TF-IDF + LR | James | `models/tfidf_lr.py` | 5.1 | placeholder |
+| TF-IDF + LR | James | `models/tfidf_lr.py` | 5.1 | done (5 turns trained) |
 | BiLSTM | Suling | `models/bilstm.py`, `torch_training.py` | 5.2 | done (5 turns trained) |
 | Transformer | Suling | `models/transformer.py`, `torch_training.py` | 5.3 | placeholder |
 
