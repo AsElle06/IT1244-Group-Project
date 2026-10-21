@@ -1,7 +1,9 @@
 # Python packages for the project. Install with: pip install -r requirements.txt
 numpy
 pandas
-scikit-learn
+# Pinned: the TF-IDF + LR models in weights/ (*.joblib) were saved with this version, and a joblib
+# file is only guaranteed to load with the scikit-learn version that saved it
+scikit-learn==1.9.1
 matplotlib
 torch
 transformers

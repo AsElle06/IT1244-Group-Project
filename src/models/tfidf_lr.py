@@ -15,13 +15,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
-import sys 
-
-ROOT = Path.cwd() 
-if str(ROOT) not in sys.path: 
-    sys.path.insert(0, str(ROOT))
-
-
 from src.interfaces import Labels, Texts
 
 NGRAM_RANGE = (1, 2)
