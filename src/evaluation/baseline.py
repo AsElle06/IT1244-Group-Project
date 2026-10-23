@@ -32,6 +32,7 @@ Owner: Lucas. Status: done.
 """
 from collections import Counter, defaultdict
 import numpy as np
+import pandas as pd
 
 
 from src.analysis import eda
@@ -80,11 +81,13 @@ class PhraseLookupBaseline:
         counts = Counter(labels_arr)
         self.majority_label_ = counts.most_common(1)[0][0]
 
-        # Extract phrases from texts and count label co-occurrences per phrase
+        # Extract all phrases at once by passing texts as a pandas Series
+        phrases = eda.complaint_phrase(pd.Series(texts))
+
+        # Count label co-occurrences per phrase
         phrase_label_counts = defaultdict(Counter)
-        for text, label in zip(texts, labels_arr):
-            phrase = eda.complaint_phrase(text)
-            if phrase is not None:
+        for phrase, label in zip(phrases, labels_arr):
+            if pd.notna(phrase):
                 phrase_label_counts[phrase][label] += 1
 
         # Save the most common training label for each observed phrase
@@ -95,23 +98,22 @@ class PhraseLookupBaseline:
         return self
 
     def predict(self, texts: Texts) -> np.ndarray:
-        """The label of each text's phrase; the most frequent training label if the text has no
-        phrase or a phrase not seen in training. Shape (n,)."""
-        predictions = []
-        for text in texts:
-            phrase = eda.complaint_phrase(text)
-            label = self.phrase_to_label_.get(phrase, self.majority_label_)
-            predictions.append(label)
-        return np.array(predictions)
+        phrases = eda.complaint_phrase(pd.Series(texts))
+        preds = [
+            self.phrase_to_label_.get(p, self.majority_label_) if pd.notna(p) else self.majority_label_
+            for p in phrases
+        ]
+        return np.asarray(preds)
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
-        """Probability 1 for the predicted class, 0 for the rest. Shape (n, len(classes_))."""
-        predictions = self.predict(texts)
-        n = len(texts)
-        proba = np.zeros((n, len(self.classes_)), dtype=float)
+        phrases = eda.complaint_phrase(pd.Series(texts))
+        n_samples = len(phrases)
+        n_classes = len(self.classes_)
+        proba = np.zeros((n_samples, n_classes), dtype=float)
 
-        class_to_idx = {cls: idx for idx, cls in enumerate(self.classes_)}
-        indices = np.array([class_to_idx[pred] for pred in predictions])
+        for i, p in enumerate(phrases):
+            target_label = self.phrase_to_label_.get(p, self.majority_label_) if pd.notna(p) else self.majority_label_
+            col_idx = np.where(self.classes_ == target_label)[0][0]
+            proba[i, col_idx] = 1.0
 
-        proba[np.arange(n), indices] = 1.0
         return proba
