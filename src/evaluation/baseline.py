@@ -28,47 +28,90 @@ Both have the same methods as the models (TextClassifier in src/interfaces.py, e
 they are recomputed instantly, never saved), so the evaluation in main.ipynb section 6 can loop
 over them together with the models; they are the first rows of the results table.
 
-Owner: Lucas. Status: placeholder (each about 5-15 lines).
+Owner: Lucas. Status: done.
 """
+from collections import Counter, defaultdict
 import numpy as np
 
+
+from src.analysis import eda
 from src.interfaces import Labels, Texts
-
-TODO = "TODO (Lucas)"
-
 
 class MajorityBaseline:
     def __init__(self):
         self.classes_: np.ndarray = np.array([])
+        self.majority_label_ = None
 
     def fit(self, texts: Texts, labels: Labels) -> "MajorityBaseline":
         """Remember the most frequent label in `labels` (texts are ignored)."""
-        raise NotImplementedError(TODO)
+        labels_arr = np.asarray(labels)
+        self.classes_ = np.unique(labels_arr)
+        
+        counts = Counter(labels_arr)
+        self.majority_label_ = counts.most_common(1)[0][0]
+        return self
 
     def predict(self, texts: Texts) -> np.ndarray:
         """The most frequent training label for every text. Shape (n,)."""
-        raise NotImplementedError(TODO)
+        n = len(texts)
+        return np.full(n, self.majority_label_)
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
         """Probability 1 for the most frequent class, 0 for the rest. Shape (n, len(classes_))."""
-        raise NotImplementedError(TODO)
-
+        n = len(texts)
+        proba = np.zeros((n, len(self.classes_)), dtype=float)
+        majority_idx = int(np.where(self.classes_ == self.majority_label_)[0][0])
+        proba[:, majority_idx] = 1.0
+        return proba
 
 class PhraseLookupBaseline:
     def __init__(self):
         self.classes_: np.ndarray = np.array([])
+        self.majority_label_ = None
+        self.phrase_to_label_: dict = {}
 
     def fit(self, texts: Texts, labels: Labels) -> "PhraseLookupBaseline":
         """Remember each complaint phrase's most common label among the training reports
         (phrases from eda.complaint_phrase, which also works on the cleaned, lowercase text),
         and the most frequent label overall for reports without a known phrase."""
-        raise NotImplementedError(TODO)
+        labels_arr = np.asarray(labels)
+        self.classes_ = np.unique(labels_arr)
+
+        counts = Counter(labels_arr)
+        self.majority_label_ = counts.most_common(1)[0][0]
+
+        # Extract phrases from texts and count label co-occurrences per phrase
+        phrase_label_counts = defaultdict(Counter)
+        for text, label in zip(texts, labels_arr):
+            phrase = eda.complaint_phrase(text)
+            if phrase is not None:
+                phrase_label_counts[phrase][label] += 1
+
+        # Save the most common training label for each observed phrase
+        self.phrase_to_label_ = {
+            phrase: counter.most_common(1)[0][0]
+            for phrase, counter in phrase_label_counts.items()
+        }
+        return self
 
     def predict(self, texts: Texts) -> np.ndarray:
         """The label of each text's phrase; the most frequent training label if the text has no
         phrase or a phrase not seen in training. Shape (n,)."""
-        raise NotImplementedError(TODO)
+        predictions = []
+        for text in texts:
+            phrase = eda.complaint_phrase(text)
+            label = self.phrase_to_label_.get(phrase, self.majority_label_)
+            predictions.append(label)
+        return np.array(predictions)
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
         """Probability 1 for the predicted class, 0 for the rest. Shape (n, len(classes_))."""
-        raise NotImplementedError(TODO)
+        predictions = self.predict(texts)
+        n = len(texts)
+        proba = np.zeros((n, len(self.classes_)), dtype=float)
+
+        class_to_idx = {cls: idx for idx, cls in enumerate(self.classes_)}
+        indices = np.array([class_to_idx[pred] for pred in predictions])
+
+        proba[np.arange(n), indices] = 1.0
+        return proba
