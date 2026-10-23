@@ -2,7 +2,7 @@
 
 Main metric: macro-F1 (every class counts equally, so rare failure types matter).
 Supporting: accuracy, weighted F1, per-class precision/recall/F1, confusion matrix,
-results per brand and per report type.
+ROC curves and ROC-AUC, results per manufacturer, text frequency and report type.
 
 Owner: Lucas. Status: placeholder. Keep the signatures and return types.
 """
@@ -29,6 +29,22 @@ def plot_confusion_matrix(y_true: Labels, y_pred: Labels, title: str = "",
     raise NotImplementedError(TODO)
 
 
+def plot_roc_curves(y_true: Labels, proba: pd.DataFrame, title: str = "",
+                    save_as: str | None = None) -> pd.Series:
+    """One-vs-rest ROC curve of each class from a model's class probabilities, in one figure.
+
+    proba: one row per report, one column per class (the out-of-fold probabilities of section 5).
+    Returns ROC-AUC per class, plus "macro average" (the mean over classes). Index: class.
+    """
+    raise NotImplementedError(TODO)
+
+
 def macro_f1_by_group(y_true: Labels, y_pred: Labels, groups: Labels) -> pd.Series:
-    """Macro-F1 within each group (e.g. brand, single- vs multi-category). Index: group."""
+    """Macro-F1 within each group (e.g. turn, manufacturer, text frequency, single- vs
+    multi-category). Index: group.
+
+    Within a group, average over the classes that occur in that group's true labels (the
+    `labels=` argument of sklearn's f1_score). Otherwise a class that is only predicted in the
+    group, never true there, would count as an extra F1 of 0.
+    """
     raise NotImplementedError(TODO)

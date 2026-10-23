@@ -7,5 +7,7 @@ Dataset (put in data/; downloaded automatically if missing):
 
 Trained weights (put in weights/; with TRAIN = False, missing files are downloaded automatically):
   view:     https://drive.google.com/drive/folders/17BsA7F9oVMgjUuJ_sb79y4z7yqE-fekn?usp=sharing
-  bilstm_fold0-4.pt, bilstm_fold0-4_history.csv   under 10 MB each: also included in the zip
-  transformer/   TODO
+  tfidf_lr_fold0-4.joblib                                  under 10 MB each: also included in the zip
+  bilstm_fold0-4.pt, bilstm_fold0-4_history.csv            under 10 MB each: also included in the zip
+  transformer_fold0-4.pt                                   about 268 MB each: Google Drive only
+  transformer_fold0-4_history.csv                          under 10 MB each: also included in the zip

@@ -6,7 +6,7 @@ free-text `event_description`. We compare three models of increasing complexity:
 
 1. TF-IDF + Logistic Regression (baseline)
 2. Bidirectional LSTM with word embeddings and attention
-3. Fine-tuned transformer (DistilBERT or Bio_ClinicalBERT)
+3. Fine-tuned transformer (DistilBERT)
 
 Main metric: macro-F1 over a 5-fold rotation. Every report is in one of 5 folds; each fold is
 the test set once while the models train on the other four, so every report is predicted
@@ -32,7 +32,9 @@ pip install -r requirements.txt
    - `TRAIN = True` trains every model once per fold and saves the weights to `weights/`.
    - `TRAIN = False` loads saved weights instead (download them first, see `links.txt`).
 
-The BiLSTM and transformer need a GPU for the full training set (e.g. Google Colab). On Colab,
+The BiLSTM and transformer need a GPU for the full training set (e.g. Google Colab). With
+`TRAIN = False` the transformer still has to read every report to make its predictions: a few
+minutes on a Colab GPU, but about 70 minutes on a CPU, so run the notebook on Colab. On Colab,
 the notebook's first code cell clones this repository and pulls the latest pushed code. Colab
 files are wiped when the runtime disconnects, so copy `weights/` back after training; with
 `TRAIN = True`, turns already saved in `weights/` are loaded instead of retrained.
@@ -79,7 +81,7 @@ links.txt                      Google Drive links for files over 10 MB
 | Evaluation (incl. baselines) | Lucas | `evaluation/` | 6 | metrics and baseline are placeholders |
 | TF-IDF + LR | James | `models/tfidf_lr.py` | 5.1 | done (5 turns trained) |
 | BiLSTM | Suling | `models/bilstm.py`, `torch_training.py` | 5.2 | done (5 turns trained) |
-| Transformer | Suling | `models/transformer.py`, `torch_training.py` | 5.3 | placeholder |
+| Transformer | Suling | `models/transformer.py`, `torch_training.py` | 5.3 | done (5 turns trained) |
 
 ## Why the dataset analysis uses the whole dataset
 
@@ -107,8 +109,8 @@ no choice is tuned on the folds that are reported.
 
 `src/evaluation/baseline.py` ignores the text and always predicts the most common training
 category (e.g. A09). It is the minimum bar every model must beat, and it shows why macro-F1 is
-our main metric: with A09 at 30% of reports and 12 classes it gets 30% accuracy but a macro-F1
-of about 0.04, because every other class scores F1 = 0. It is not the same as TF-IDF + LR,
+our main metric: with A09 at 40% of reports (after the copy cap) and 12 classes it gets 40%
+accuracy but a macro-F1 of about 0.05, because every other class scores F1 = 0. It is not the same as TF-IDF + LR,
 which the proposal calls our "baseline model" (the simplest real classifier).
 
 A much stronger reference is a phrase-lookup baseline: the template's complaint phrase ->
