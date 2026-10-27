@@ -5,6 +5,7 @@ pandas
 # file is only guaranteed to load with the scikit-learn version that saved it
 scikit-learn==1.9.1
 matplotlib
+seaborn
 torch
 transformers
 ipykernel

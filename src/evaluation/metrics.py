@@ -4,7 +4,7 @@ Main metric: macro-F1 (every class counts equally, so rare failure types matter)
 Supporting: accuracy, weighted F1, per-class precision/recall/F1, confusion matrix,
 ROC curves and ROC-AUC, results per manufacturer, text frequency and report type.
 
-Owner: Lucas. Status: placeholder. Keep the signatures and return types.
+Owner: Lucas. Status: done.
 """
 from pathlib import Path
 import matplotlib.pyplot as plt

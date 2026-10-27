@@ -35,7 +35,8 @@ def out_of_fold_proba(make_model: Callable[[], TextClassifier], texts: pd.Series
         path = model_path(k) if model_path else None
         already_saved = path is not None and Path(path).exists() and load_model is not None
         if train and not already_saved:
-            print(f"turn {k}: training")
+            if path is not None:  # models that are never saved (the baselines) train instantly
+                print(f"turn {k}: training")
             train_texts, train_labels = texts.iloc[train_positions], labels.iloc[train_positions]
             model = make_model().fit(train_texts, train_labels)
             if path is not None:

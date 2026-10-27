@@ -106,14 +106,6 @@ class PhraseLookupBaseline:
         return np.asarray(preds)
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
-        phrases = eda.complaint_phrase(pd.Series(texts))
-        n_samples = len(phrases)
-        n_classes = len(self.classes_)
-        proba = np.zeros((n_samples, n_classes), dtype=float)
-
-        for i, p in enumerate(phrases):
-            target_label = self.phrase_to_label_.get(p, self.majority_label_) if pd.notna(p) else self.majority_label_
-            col_idx = np.where(self.classes_ == target_label)[0][0]
-            proba[i, col_idx] = 1.0
-
-        return proba
+        """Probability 1 for the predicted class, 0 for the rest. Shape (n, len(classes_))."""
+        preds = self.predict(texts)
+        return (preds[:, None] == self.classes_[None, :]).astype(float)
