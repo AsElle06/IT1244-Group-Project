@@ -58,7 +58,7 @@ def make_loader(inputs: list, label_ids: np.ndarray, batch_size: int,
     """Batches of (model inputs, label ids).
 
     inputs: one item per report, in whatever form the model's collate function expects
-        (word ids for the BiLSTM, texts for the transformer).
+        (word ids for the BiLSTM, sub-word token ids for the transformer).
     collate: turns a list of items into the dict of tensors the network takes as net(**inputs).
     """
     pairs = list(zip(inputs, label_ids))

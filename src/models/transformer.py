@@ -92,7 +92,7 @@ class TransformerClassifier:
         return self.classes_[self.predict_proba(texts).argmax(axis=1)]
 
     def save(self, path: Path) -> None:
-        """Save settings, classes, weights (32-bit) and training history to one .pt file (~265 MB),
+        """Save settings, classes, weights (32-bit) and training history to one .pt file (~268 MB),
         and the history (loss and validation macro-F1 per epoch) to <name>_history.csv."""
         path = Path(path)
         torch.save({"settings": self.settings, "classes": list(self.classes_),

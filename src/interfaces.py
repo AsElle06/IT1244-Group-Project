@@ -2,7 +2,6 @@
 
 Every module codes against these, so data -> models -> evaluation plug together:
 the model interface (TextClassifier), the score dictionaries and the fold type.
-If you need to change one, tell the team first.
 """
 from pathlib import Path
 from typing import Protocol, Sequence, TypedDict, Union

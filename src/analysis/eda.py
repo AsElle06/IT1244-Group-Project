@@ -1,9 +1,9 @@
 """Exploratory analysis of the whole dataset: distributions and associations.
 
-Runs on the whole dataset, before the split: the split itself depends on what this finds
-(which labels to drop or merge, how to group near-identical reports). Anything fitted to the
-data (vocabulary, class weights, rare classes, max input length) is still computed from the
-training set only, after the split.
+Runs on the whole dataset, before the folds are made: the folds themselves depend on what this
+finds (which labels to drop or merge, how to group near-identical reports). Nothing here is
+fitted: everything the models learn (vocabulary, class weights, network weights) comes from
+each turn's training folds only.
 
 One function per planned analysis in the proposal; each comment says which decision it informs.
 Plot functions show the figure and, if save_as is given, also save it to config.FIGURES_DIR
@@ -179,7 +179,7 @@ def short_description_summary(texts: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(results).set_index("threshold")
 
 
-# 4. Duplicate (template) descriptions -> how the split keeps them on one side
+# 4. Duplicate (template) descriptions -> how the folds keep them together
 
 def duplicate_summary(df: pd.DataFrame) -> tuple[pd.Series, pd.DataFrame]:
     """Returns (stats, top_templates).

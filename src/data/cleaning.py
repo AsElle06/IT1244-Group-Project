@@ -92,8 +92,8 @@ def template_key(texts: pd.Series) -> pd.Series:
     Keeps one copy of a description that repeats itself (remove_repeated_text), upper-cases it
     and removes redaction markers, every token containing a digit (dates, years, IDs, glucose
     values) and punctuation. Reports with the same key differ only in those details, so the
-    train/test split and the CV folds must keep them on one side, and the dataset analysis
-    counts them as one description. Same index as texts; missing values give "".
+    dataset analysis counts them as one description, and eda.text_frequency uses the key to
+    tell templates from one-off text. Same index as texts; missing values give "".
     """
     return (
         texts.fillna("").astype(str).map(remove_repeated_text).str.upper()
@@ -134,7 +134,7 @@ def clean_labels(labels: pd.Series) -> pd.Series:
 
 
 def clean_reports(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply all fixed cleaning rules to a train or test DataFrame.
+    """Apply all fixed cleaning rules to the whole dataset (before the folds are made).
 
     Drops reports labelled NONE and reports with no text left after cleaning, cleans
     config.TEXT_COL (clean_text) and merges A24-A27 (clean_labels). Returns the same columns as

@@ -4,7 +4,7 @@ Turns each report into weighted word/phrase counts and learns which n-grams poin
 category, with class_weight="balanced" for the rare classes. Strong on template reports where
 one phrase (e.g. "signal loss") decides the label, but ignores word order.
 
-Owner: James. Status: In progress. Implements the TextClassifier interface (src/interfaces.py).
+Owner: James. Status: done. Implements the TextClassifier interface (src/interfaces.py).
 """
 from pathlib import Path
 

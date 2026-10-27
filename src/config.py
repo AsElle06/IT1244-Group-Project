@@ -1,4 +1,4 @@
-"""Project-wide settings: folders, random seed, column names, split sizes.
+"""Project-wide settings: folders, random seed, column names, folds, copy cap, rare-class threshold.
 
 Every module reads its settings from here, so change values here rather than in the code.
 """
